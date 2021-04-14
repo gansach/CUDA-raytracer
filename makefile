@@ -7,19 +7,14 @@ INCLUDE := include
 LIB     := lib
 LIBRARIES   := 
 EXECUTABLE  := main
-IMAGE	 := images/test
-PPM := ppm
-FORMAT := jpg
-
+IMAGE	 := test.png
 
 all: $(BIN)/$(EXECUTABLE)
 
 run: clean all
 	    clear
 	        @echo "🚀 Executing..."
-		    ./$(BIN)/$(EXECUTABLE)>$(IMAGE).$(PPM) 
-			# Using Imagemagick convert
-			convert $(IMAGE).$(PPM) $(IMAGE).$(FORMAT)
+		    ./$(BIN)/$(EXECUTABLE) $(IMAGE)
 
 $(BIN)/$(EXECUTABLE): $(SRC)/*.cc
 	    @echo "🚧 Building..."

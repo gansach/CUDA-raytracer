@@ -4,6 +4,9 @@
 #include "rtweekend.h"
 #include "hittable.h"
 
+template <typename T>
+void ignore(T &&) {}
+
 struct hit_record;
 
 class material
@@ -21,6 +24,7 @@ public:
     virtual bool scatter(
         const ray &r_in, const hit_record &rec, color &attenuation, ray &scattered) const override
     {
+        ignore(r_in);
         auto scatter_direction = rec.normal + random_unit_vector();
 
         // Catch degenerate scatter direction

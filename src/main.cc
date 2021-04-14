@@ -7,6 +7,36 @@
 #include "material.h"
 
 #include <iostream>
+#include <fstream>
+#include <sstream>
+
+#define STB_IMAGE_IMPLEMENTATION
+#include "stb_image.h"
+
+#define STBI_MSC_SECURE_CRT
+#define STB_IMAGE_WRITE_IMPLEMENTATION
+#include "stb_image_write.h"
+
+void printProgress(float done)
+{
+    float progress = 0.0;
+    int barWidth = 50;
+    progress += done;
+
+    std::cout << "[";
+    int pos = barWidth * progress;
+    for (int i = 0; i < barWidth; ++i)
+    {
+        if (i < pos)
+            std::cout << "=";
+        else if (i == pos)
+            std::cout << ">";
+        else
+            std::cout << " ";
+    }
+    std::cout << "] " << int(progress * 100.0) << " %\r";
+    std::cout.flush();
+}
 
 color ray_color(const ray &r, const hittable &world, int depth)
 {
@@ -29,48 +59,58 @@ color ray_color(const ray &r, const hittable &world, int depth)
     return (1.0 - t) * color(1.0, 1.0, 1.0) + t * color(0.5, 0.7, 1.0);
 }
 
-int main(void)
+hittable_list random_scene()
+{
+    hittable_list world;
+
+    auto ground_material = make_shared<lambertian>(color(0.5, 0.5, 0.5));
+    world.add(make_shared<sphere>(point3(0, -1000, 0), 1000, ground_material));
+
+    auto material1 = make_shared<dielectric>(1.5);
+    world.add(make_shared<sphere>(point3(0, 1, 0), 1.0, material1));
+
+    auto material2 = make_shared<lambertian>(color(0.4, 0.2, 0.1));
+    world.add(make_shared<sphere>(point3(-4, 1, 0), 1.0, material2));
+
+    auto material3 = make_shared<metal>(color(0.7, 0.6, 0.5), 0.0);
+    world.add(make_shared<sphere>(point3(4, 1, 0), 1.0, material3));
+
+    return world;
+}
+
+int main(int argc, char *argv[])
 {
     // Image
 
-    const auto aspect_ratio = 16.0 / 9.0;
-    const int image_width = 400;
+    const auto aspect_ratio = 3.0 / 2.0;
+    const int image_width = 1200;
     const int image_height = static_cast<int>(image_width / aspect_ratio);
-    const int samples_per_pixel = 100;
-    const int max_depth = 50;
+    const int samples_per_pixel = 10;
+    const int max_depth = 5;
 
     // World
 
-    hittable_list world;
-
-    auto material_ground = make_shared<lambertian>(color(0.8, 0.8, 0.0));
-    auto material_center = make_shared<lambertian>(color(0.1, 0.2, 0.5));
-    auto material_left = make_shared<dielectric>(1.5);
-    auto material_right = make_shared<metal>(color(0.8, 0.6, 0.2), 0.0);
-
-    world.add(make_shared<sphere>(point3(0.0, -100.5, -1.0), 100.0, material_ground));
-    world.add(make_shared<sphere>(point3(0.0, 0.0, -1.0), 0.5, material_center));
-    world.add(make_shared<sphere>(point3(-1.0, 0.0, -1.0), 0.5, material_left));
-    world.add(make_shared<sphere>(point3(-1.0, 0.0, -1.0), -0.45, material_left));
-    world.add(make_shared<sphere>(point3(1.0, 0.0, -1.0), 0.5, material_right));
+    auto world = random_scene();
 
     // Camera
-    point3 lookfrom(3, 3, 2);
-    point3 lookat(0, 0, -1);
+    point3 lookfrom(13, 2, 3);
+    point3 lookat(0, 0, 0);
     vec3 vup(0, 1, 0);
-    auto dist_to_focus = (lookfrom - lookat).length();
-    auto aperture = 2.0;
+    auto dist_to_focus = 10.0;
+    auto aperture = 0.1;
 
     camera cam(lookfrom, lookat, vup, 20, aspect_ratio, aperture, dist_to_focus);
 
     // Render
+#define CHANNEL_NUM 3
 
-    std::cout << "P3\n"
-              << image_width << ' ' << image_height << "\n255\n";
+    uint8_t *pixels = new uint8_t[image_width * image_height * CHANNEL_NUM];
 
+    int index = 0;
     for (int j = image_height - 1; j >= 0; --j)
     {
-        std::cerr << "\rScanlines remaining: " << j << ' ' << std::flush;
+        // std::cerr << "\rScanlines remaining: " << j << ' ' << std::flush;
+        printProgress((image_height - j) / (float)image_height);
         for (int i = 0; i < image_width; ++i)
         {
             color pixel_color(0, 0, 0);
@@ -81,8 +121,21 @@ int main(void)
                 ray r = cam.get_ray(u, v);
                 pixel_color += ray_color(r, world, max_depth);
             }
-            write_color(std::cout, pixel_color, samples_per_pixel);
+            color out = write_color(pixel_color, samples_per_pixel);
+            pixels[index++] = out.x();
+            pixels[index++] = out.y();
+            pixels[index++] = out.z();
         }
     }
     std::cerr << "\nDone.\n";
+
+    // if CHANNEL_NUM is 4, you can use alpha channel in png
+    ignore(argc);
+    stbi_write_png(argv[1], image_width, image_height, CHANNEL_NUM, pixels, image_width * CHANNEL_NUM);
+
+    // You have to use 3 comp for complete jpg file. If not, the image will be grayscale or nothing.
+    // stbi_write_jpg(argv[1], image_width, image_height, 3, pixels, 100);
+    delete[] pixels;
+
+    return 0;
 }

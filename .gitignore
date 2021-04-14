@@ -1,8 +1,7 @@
-*
-!*.*
-!*/
+# Ignore all images 
+/images/*
+!/images/.keep
 
-*.exe
-
-# Ignore images directory
-/images
+# Ignore all executable
+/bin/*
+!/images/.keep

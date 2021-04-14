@@ -4,4 +4,4 @@
 
 # Ignore all executable
 /bin/*
-!/images/.keep
+!/bin/.keep

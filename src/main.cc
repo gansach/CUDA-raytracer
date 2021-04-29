@@ -1,4 +1,4 @@
-#include "rtweekend.h"
+#include "utils.h"
 
 #include "camera.h"
 #include "color.h"
@@ -7,8 +7,7 @@
 #include "material.h"
 
 #include <iostream>
-#include <fstream>
-#include <sstream>
+#include <ctime>
 
 #define STB_IMAGE_IMPLEMENTATION
 #include "stb_image.h"
@@ -107,6 +106,9 @@ int main(int argc, char *argv[])
     uint8_t *pixels = new uint8_t[image_width * image_height * CHANNEL_NUM];
 
     int index = 0;
+
+    clock_t start, stop;
+    start = clock();
     for (int j = image_height - 1; j >= 0; --j)
     {
         // std::cerr << "\rScanlines remaining: " << j << ' ' << std::flush;
@@ -127,6 +129,9 @@ int main(int argc, char *argv[])
             pixels[index++] = out.z();
         }
     }
+    stop = clock();
+    double timer_seconds = ((double)(stop - start)) / CLOCKS_PER_SEC;
+    std::cerr << "\ntook " << timer_seconds << " seconds.\n";
     std::cerr << "\nDone.\n";
 
     // if CHANNEL_NUM is 4, you can use alpha channel in png

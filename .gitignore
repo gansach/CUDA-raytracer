@@ -1,7 +1,9 @@
 # Ignore all images 
 /images/*
-!/images/.keep
 
 # Ignore all executable
 /bin/*
 !/bin/.keep
+
+# All images
+*.png

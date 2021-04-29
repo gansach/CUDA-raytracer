@@ -3,7 +3,7 @@ CXX_FLAGS := -Wall -Wextra -std=c++17 -ggdb
 
 BIN     := bin
 SRC     := src
-INCLUDE := include
+INCLUDES := include lib
 LIB     := lib
 LIBRARIES   := 
 EXECUTABLE  := main
@@ -18,7 +18,7 @@ run: clean all
 
 $(BIN)/$(EXECUTABLE): $(SRC)/*.cc
 	    @echo "🚧 Building..."
-	        $(CXX) $(CXX_FLAGS) -I$(INCLUDE) -L$(LIB) $^ -o $@ $(LIBRARIES)
+	        $(CXX) $(CXX_FLAGS) $(foreach dir,$(INCLUDES),-I$(dir)) -L$(LIB) $^ -o $@ $(LIBRARIES)
 
 clean:
 	    @echo "🧹 Clearing..."
